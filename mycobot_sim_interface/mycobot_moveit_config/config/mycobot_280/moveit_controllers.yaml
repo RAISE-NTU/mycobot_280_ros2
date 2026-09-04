@@ -1,0 +1,37 @@
+# This file configures the controller management for MoveIt, specifying which controllers are available,
+# the joints each controller handles, and the type of interface (e.g. FollowJointTrajectory).
+moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager  # Specifies the controller manager to use.
+
+# Define the controllers configured using the ROS 2 Control framework.
+moveit_simple_controller_manager:
+  controller_names:
+    - arm_controller                # Name of the controller for the robotic arm.
+    - gripper_action_controller     # Adaptive gripper (re-enabled 2026-08-05).
+    # NOTE: only enable gripper_action_controller when launching with use_gripper:=true.
+    # If listed but not spawned (no gripper), MoveIt advertises a gripper capability it
+    # cannot execute and any gripper/arm_with_gripper goal waits on a missing action
+    # server. The gripper is now physically fitted and driven via SET_GRIPPER_VALUE.
+
+  # Configuration for the arm_controller.
+  arm_controller:
+    action_ns: follow_joint_trajectory   # ROS action namespace to which MoveIt sends trajectory commands.
+    type: FollowJointTrajectory          # Type of the controller interface; follows a joint trajectory.
+    default: true                        # This controller is the default for the joints listed below.
+    joints:                              # List of joints that the arm_controller manages.
+      - link1_to_link2
+      - link2_to_link3
+      - link3_to_link4
+      - link4_to_link5
+      - link5_to_link6
+      - link6_to_link6_flange
+
+  # Configuration for the gripper_action_controller. MoveIt sends a GripperCommand goal
+  # on the gripper_cmd action namespace; the ros2_control GripperActionController serves
+  # it and forwards the position to the gripper_controller command interface.
+  gripper_action_controller:
+    action_ns: gripper_cmd
+    type: GripperCommand
+    default: true
+    joints:
+      - gripper_controller
+

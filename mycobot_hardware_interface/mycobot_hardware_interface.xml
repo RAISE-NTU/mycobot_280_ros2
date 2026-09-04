@@ -1,0 +1,10 @@
+<library path="mycobot_hardware_interface">
+  <class
+    name="mycobot_hardware_interface/MyCobotSystemInterface"
+    type="mycobot_hardware_interface::MyCobotSystemInterface"
+    base_class_type="hardware_interface::SystemInterface">
+    <description>
+      ros2_control hardware interface for myCobot 280 M5 via USB serial.
+    </description>
+  </class>
+</library>

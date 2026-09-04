@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+    <xacro:macro name="g_shape_base" params="base_link prefix">
+        <link name="${prefix}${base_link}">
+            <inertial>
+                <origin xyz="0 0 0.0" rpy="0 0 0"/>
+                <mass value="0.33"/>
+                <inertia
+                    ixx="0.000784" ixy="0.0" ixz="0.0"
+                    iyy="0.000867" iyz="0.0"
+                    izz="0.001598"/>
+            </inertial>
+            <visual>
+                <geometry>
+                    <mesh filename="file://$(find mycobot_description)/meshes/g_shape_base_v2_0/visual/base_link.dae"/>
+                </geometry>
+                <origin xyz="0.0 0 -0.03" rpy="0 0 ${pi/2}"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <box size="0.105 0.14 0.02"/>
+                </geometry>
+                <origin xyz="0.0 0.0 -0.015" rpy="0 0 0"/>
+            </collision>
+        </link>
+
+        <!--
+          Unlike the arm links, this override is INTENTIONALLY kept enabled. base_link.dae is a
+          Rhino export with no texture image (and no PNG ships for it), so its own COLLADA
+          material is just a flat 0.98 off-white. A solid colour is the correct appearance here
+          anyway: the real G-shape base is plain anodised aluminium with no printed graphics.
+          Dark matte grey, deliberately darker than the light-grey textured arm links.
+        -->
+        <gazebo reference="${prefix}${base_link}">
+            <visual>
+                <material>
+                    <ambient>0.12 0.12 0.12 1</ambient>
+                    <diffuse>0.22 0.22 0.22 1</diffuse>
+                    <specular>0.15 0.15 0.15 1</specular>
+                </material>
+            </visual>
+        </gazebo>
+    </xacro:macro>
+</robot>
