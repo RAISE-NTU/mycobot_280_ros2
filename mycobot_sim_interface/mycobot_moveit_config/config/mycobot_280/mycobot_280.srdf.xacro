@@ -41,7 +41,7 @@
             <group name="gripper" />
         </group>
 
-        <end_effector name="gripper" parent_link="link6_flange" group="gripper"/>
+        <end_effector name="gripper_eef" parent_link="link6_flange" group="gripper"/>
     </xacro:if>
 
     <group_state name="home" group="arm">

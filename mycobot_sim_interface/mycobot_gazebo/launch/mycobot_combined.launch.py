@@ -112,6 +112,34 @@ def generate_launch_description():
         description='Show the Ignition Gazebo GUI. Set false to run the server '
                     'headless; camera sensors keep rendering either way.')
 
+    # Camera placement and optics. Defaults are the pose measured on the
+    # physical rig and shared with the hand-eye calibration repository; the
+    # calibration only ever sees base_link -> camera, so these must match it.
+    declare_camera_tilt = DeclareLaunchArgument(
+        name='camera_tilt_deg', default_value='23.97',
+        description='Camera pitch, degrees below horizontal.')
+    declare_camera_pan = DeclareLaunchArgument(
+        name='camera_pan_deg', default_value='162.13',
+        description='Camera yaw about base +Z, degrees.')
+    declare_camera_offset_x = DeclareLaunchArgument(
+        name='camera_offset_x', default_value='0.0',
+        description='Camera offset from the stand top, in base_link axes, m.')
+    declare_camera_offset_y = DeclareLaunchArgument(
+        name='camera_offset_y', default_value='-0.025',
+        description='Camera offset from the stand top, m.')
+    declare_camera_offset_z = DeclareLaunchArgument(
+        name='camera_offset_z', default_value='0.0',
+        description='Camera offset from the stand top, m.')
+    declare_camera_stand_x = DeclareLaunchArgument(
+        name='camera_stand_x', default_value='0.1666',
+        description='Stand position in base_link, metres.')
+    declare_camera_stand_y = DeclareLaunchArgument(
+        name='camera_stand_y', default_value='0.2575',
+        description='Stand position in base_link, metres.')
+    declare_camera_stand_z = DeclareLaunchArgument(
+        name='camera_stand_z', default_value='0.4330',
+        description='Camera height above the stand base.')
+
     declare_robot_name = DeclareLaunchArgument(
         name='robot_name',
         default_value='mycobot_280',
@@ -139,6 +167,14 @@ def generate_launch_description():
         launch_arguments={
             'jsp_gui': 'false',
             'use_camera': use_camera,
+            'camera_tilt_deg': LaunchConfiguration('camera_tilt_deg'),
+            'camera_pan_deg': LaunchConfiguration('camera_pan_deg'),
+            'camera_offset_x': LaunchConfiguration('camera_offset_x'),
+            'camera_offset_y': LaunchConfiguration('camera_offset_y'),
+            'camera_offset_z': LaunchConfiguration('camera_offset_z'),
+            'camera_stand_x': LaunchConfiguration('camera_stand_x'),
+            'camera_stand_y': LaunchConfiguration('camera_stand_y'),
+            'camera_stand_z': LaunchConfiguration('camera_stand_z'),
             'use_gazebo': use_sim,      # tells RSP whether to expect sim clock
             'use_gripper': use_gripper,
             'use_rviz': 'false',        # RViz handled below in OpaqueFunction
@@ -438,16 +474,29 @@ def generate_launch_description():
         # If user kept the default z (0.05) and selected calibration.world,
         # raise the robot to stand on the table top.
         #
-        #   table slab: 0.05 m thick, centred at z=0.4  -> top surface at 0.425
-        #   chassis:    collision box bottom sits 0.025 m BELOW base_link
-        #   => 0.425 + 0.025 = 0.45 puts the collision box flat on the surface
+        # base_link is NOT the bottom of the chassis. The g_shape_base mesh is
+        # millimetres (<unit meter="0.001">, Z_UP) spanning -0.055..+0.055, and
+        # its visual origin adds another -0.03, so the chassis bottom sits
+        # 0.085 BELOW base_link. The table slab is 0.05 thick centred at z=0.4,
+        # so its top is at 0.425 and seating the chassis exactly on it would
+        # need spawn z = 0.510.
         #
-        # 0.46 adds 10 mm on top of that. The visual mesh origin is at -0.03,
-        # 5 mm lower than the collision bottom, so at a flush 0.45 the visible
-        # chassis still dips into the slab. The clearance keeps it clear.
+        # 0.460 is what this uses, matching the hand-eye calibration
+        # repository. It leaves the chassis bottom at 0.375, i.e. flush with
+        # the underside of the slab. Nothing downstream cares, because the
+        # calibration only ever sees base_link -> camera, so this is
+        # presentation only.
         #
-        # 0.425 was used here originally, which placed base_link on the surface
-        # and therefore buried the whole chassis inside the slab.
+        # camera_stand_drop in the intel_rgbd_cam_d435 xacro MUST be kept equal
+        # to (this value - 0.425) or the camera stand floats above the table or
+        # sinks into it. It is 0.035 to match 0.460.
+        #
+        # This raises the CAMERA too -- the stand is a child of base_link -- and
+        # that is deliberate. base_link -> camera is the only geometry the
+        # calibration sees and it is set to the pose measured on the physical
+        # rig, so lifting both together preserves it. Holding the camera at a
+        # fixed world height would mean lowering camera_stand_z by the same
+        # amount, which would break that match.
         if world_str == 'calibration.world' and z_str == '0.05':
             z_str = '0.46'
         return [Node(
@@ -489,6 +538,14 @@ def generate_launch_description():
     ld.add_action(declare_use_gripper)
     ld.add_action(declare_use_camera)
     ld.add_action(declare_use_gz_gui)
+    ld.add_action(declare_camera_tilt)
+    ld.add_action(declare_camera_pan)
+    ld.add_action(declare_camera_offset_x)
+    ld.add_action(declare_camera_offset_y)
+    ld.add_action(declare_camera_offset_z)
+    ld.add_action(declare_camera_stand_x)
+    ld.add_action(declare_camera_stand_y)
+    ld.add_action(declare_camera_stand_z)
     ld.add_action(declare_robot_name)
     ld.add_action(declare_world_file)
     ld.add_action(declare_x)

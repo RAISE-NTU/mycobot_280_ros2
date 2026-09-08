@@ -88,7 +88,34 @@ ARGUMENTS = [
                           description='Whether to use Gazebo simulation'),
     DeclareLaunchArgument('use_gripper', default_value='true',
                           choices=['true', 'false'],
-                          description='Whether to attach a gripper')
+                          description='Whether to attach a gripper'),
+    # Camera placement and optics, forwarded to xacro. These exist as xacro
+    # args but were previously unreachable from any launch file, so the
+    # documented `camera_tilt_deg:=25 camera_pan_deg:=0` did nothing at all.
+    # Moving the camera has to happen here rather than in the Gazebo GUI: it is
+    # a link of the robot model, and robot_state_publisher publishes its TF
+    # from this description, so a GUI drag would desynchronise images from TF.
+    DeclareLaunchArgument('camera_tilt_deg', default_value='23.97',
+                          description='Camera pitch, degrees below horizontal.'),
+    DeclareLaunchArgument('camera_pan_deg', default_value='162.13',
+                          description='Camera yaw about base +Z, degrees.'),
+    DeclareLaunchArgument('camera_offset_x', default_value='0.0',
+                          description='Camera offset from the TOP OF THE STAND '
+                                      'in base_link axes. Moves the sensor '
+                                      'without moving the pole.'),
+    DeclareLaunchArgument('camera_offset_y', default_value='-0.025',
+                          description='Camera offset from the stand top, m.'),
+    DeclareLaunchArgument('camera_offset_z', default_value='0.0',
+                          description='Camera offset from the stand top, m.'),
+    DeclareLaunchArgument('camera_stand_x', default_value='0.1666',
+                          description='Stand position in base_link, metres.'),
+    DeclareLaunchArgument('camera_stand_y', default_value='0.2575',
+                          description='Stand position in base_link, metres.'),
+    DeclareLaunchArgument('camera_stand_z', default_value='0.4330',
+                          description='Camera height above the stand base.'),
+    DeclareLaunchArgument('camera_hfov', default_value='1.5184',
+                          description='Horizontal FOV in radians. Must match '
+                                      'camera_hfov in the calibration config.')
 ]
 
 
@@ -168,7 +195,16 @@ def generate_launch_description():
         'gripper_type:=', LaunchConfiguration('gripper_type'), ' ',
         'use_camera:=', LaunchConfiguration('use_camera'), ' ',
         'use_gazebo:=', LaunchConfiguration('use_gazebo'), ' ',
-        'use_gripper:=', LaunchConfiguration('use_gripper')
+        'use_gripper:=', LaunchConfiguration('use_gripper'), ' ',
+        'camera_offset_x:=', LaunchConfiguration('camera_offset_x'), ' ',
+        'camera_offset_y:=', LaunchConfiguration('camera_offset_y'), ' ',
+        'camera_offset_z:=', LaunchConfiguration('camera_offset_z'), ' ',
+        'camera_tilt_deg:=', LaunchConfiguration('camera_tilt_deg'), ' ',
+        'camera_pan_deg:=', LaunchConfiguration('camera_pan_deg'), ' ',
+        'camera_stand_x:=', LaunchConfiguration('camera_stand_x'), ' ',
+        'camera_stand_y:=', LaunchConfiguration('camera_stand_y'), ' ',
+        'camera_stand_z:=', LaunchConfiguration('camera_stand_z'), ' ',
+        'camera_hfov:=', LaunchConfiguration('camera_hfov')
     ]), value_type=str)
 
     # Subscribe to the joint states of the robot, and publish the 3D pose of each link.

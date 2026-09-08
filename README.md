@@ -132,14 +132,24 @@ planner may command up to `2.79` rad/s per joint.
 ros2 launch mycobot_gazebo mycobot_combined.launch.py use_camera:=true world_file:=calibration.world
 ```
 
-Spawns the arm on the table with the RealSense D435 on its stand at `base_link`
-+ (0.22, −0.30, 0.50), looking across the workspace.
+Spawns the arm on the table with the RealSense D435 on its stand, looking
+across the workspace. The camera sits at `base_link` + (0.167, 0.242, 0.433),
+panned 162.13° and tilted 23.97° below horizontal — the pose measured on the
+physical rig, shared with the hand-eye calibration repository. Stand position,
+camera offset, pan and tilt are all launch arguments (`camera_stand_x/y/z`,
+`camera_offset_x/y/z`, `camera_pan_deg`, `camera_tilt_deg`).
 
-The spawn `z` auto-raises to `0.46`. The table slab is 0.05 m thick centred at
-`z = 0.4`, so its top surface is at `0.425`, and the chassis collision box
-hangs 0.025 m below `base_link` — `0.45` would sit it flush, and the extra
-10 mm clears the visual mesh, whose origin is 5 mm lower than the collision
-box. Without the raise the chassis is buried inside the slab.
+The spawn `z` auto-raises to `0.46`. `base_link` is not the bottom of the
+chassis: the base mesh is millimetre-scaled, spans ±0.055 m, and its visual
+origin adds another −0.03, so the chassis bottom sits **0.085 m below**
+`base_link`. The table slab is 0.05 m thick centred at `z = 0.4`, giving a top
+surface at `0.425`, so seating the chassis exactly on it would need `z = 0.510`.
+
+`0.46` is used instead, matching the calibration repository. It leaves the
+chassis flush with the underside of the slab — presentation only, since the
+calibration only ever sees `base_link → camera`. **`camera_stand_drop` in the
+camera xacro must equal `z − 0.425`**; it is `0.035` to match `0.46`. Changing
+one without the other leaves the camera stand floating or sunk.
 
 Bridged topics:
 
@@ -150,8 +160,18 @@ Bridged topics:
 | `/camera_head/color/camera_info`, `/camera_head/depth/camera_info` | intrinsics |
 | `/camera_head/depth/color/points` | coloured point cloud |
 
-To view a stream in RViz: **Add** → **By topic** → expand `/camera_head/color`
-→ **Image** under `image_raw`.
+View a stream with `rqt_image_view`, **not** an RViz Image display:
+
+```bash
+ros2 run rqt_image_view rqt_image_view /camera_head/color/image_raw
+```
+
+Adding an `rviz_default_plugins/Image` display to `move_group.rviz` segfaults
+RViz (exit −11) and the launch teardown takes Gazebo, `move_group` and the
+controller spawners down with it — so the whole simulation dies, with GL errors
+in the log that send you hunting the wrong thing. An Image display is fine on
+its own; it is the combination with MoveIt's **MotionPlanning** display that
+crashes, and this config carries one.
 
 #### Spawning objects
 
